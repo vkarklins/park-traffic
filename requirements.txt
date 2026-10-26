@@ -2,3 +2,4 @@ raindrop-ai
 openai>=1.40
 httpx
 python-dotenv
+lmnr

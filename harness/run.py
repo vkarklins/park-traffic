@@ -1,9 +1,10 @@
 """Run a batch of simulated conversations against the Park Trip Assistant.
 
 Examples (from the park_demo folder):
-  python -m harness.run --n 3 --dry-run                     # nothing sent to Raindrop
+  python -m harness.run --n 3 --dry-run                     # nothing sent anywhere
   python -m harness.run --n 10 --mix clean --label smoke     # real smoke test
   python -m harness.run --n 130 --mix baseline --bugs all --label baseline --max-events 700
+  python -m harness.run --n 3 --telemetry raindrop           # the original Raindrop backend
 
 Outputs go to runs/<timestamp>-<label>/:
   answer_key.jsonl   one line per conversation: target bug, bugs that fired, outcome
@@ -27,7 +28,7 @@ from openai import OpenAI
 
 from park_assistant.bugs import ALL_BUGS, BugConfig, BugRecorder
 from park_assistant.chatbot import ParkAssistant
-from park_assistant.telemetry import Telemetry
+from park_assistant.telemetry import BACKENDS, make_telemetry
 
 from .render import render
 from .scenarios import MIX_BASELINE, MIX_CLEAN, MIX_FORGETTING, build_deck
@@ -107,8 +108,9 @@ def main():
     p.add_argument("--label", default="run")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--workers", type=int, default=4)
-    p.add_argument("--max-events", type=int, default=None, help="hard cap on Raindrop events")
-    p.add_argument("--dry-run", action="store_true", help="don't send anything to Raindrop")
+    p.add_argument("--max-events", type=int, default=None, help="hard cap on events (turns) sent")
+    p.add_argument("--dry-run", action="store_true", help="don't send anything to the telemetry backend")
+    p.add_argument("--telemetry", choices=BACKENDS, default="laminar", help="where turns are sent")
     p.add_argument("--sim-style", choices=STYLES, default="flipped",
                    help="how the simulated visitor sees the conversation (see probe_sim.py)")
     args = p.parse_args()
@@ -122,13 +124,13 @@ def main():
     out_dir = Path("runs") / f"{datetime.now():%Y%m%d-%H%M%S}-{args.label}"
     out_dir.mkdir(parents=True)
     deck = build_deck(args.n, MIXES[args.mix], seed=args.seed)
-    telemetry = Telemetry(dry_run=args.dry_run)
+    telemetry = make_telemetry(args.telemetry, dry_run=args.dry_run)
     client = OpenAI()
     bug_config = BugConfig(enabled=enabled, app_version=args.app_version)
     budget = EventBudget(args.max_events)
 
     print(f"Running {len(deck)} conversations | mix={args.mix} | bugs={sorted(enabled) or 'none'} "
-          f"| version={args.app_version} | {'DRY RUN' if args.dry_run else 'SENDING TO RAINDROP'}")
+          f"| version={args.app_version} | {'DRY RUN' if args.dry_run else 'SENDING TO ' + args.telemetry.upper()}")
     t0 = time.time()
     results, skipped = [], 0
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
@@ -156,6 +158,7 @@ def main():
     summary = {
         "label": args.label, "mix": args.mix, "bugs_enabled": sorted(enabled),
         "app_version": args.app_version, "dry_run": args.dry_run, "sim_style": args.sim_style,
+        "telemetry": args.telemetry,
         "conversations": len(results), "skipped_for_event_cap": skipped,
         "events_sent": 0 if args.dry_run else telemetry.events_sent,
         "outcomes": dict(Counter(r["outcome"] for r in results)),
