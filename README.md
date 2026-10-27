@@ -1,7 +1,15 @@
-# Park Trip Assistant + traffic harness (Raindrop failure-clustering demo)
+# Park Trip Assistant + traffic harness
 
 A small chatbot with planted bugs, plus a harness that runs simulated visitors
-against it so Raindrop has realistic, varied conversations to cluster.
+against it, so an LLM observability tool has realistic, varied conversations to analyze.
+Each turn is sent to **Laminar** (self-hosted, the default) or **Raindrop** (`--telemetry raindrop`).
+With Laminar, each turn is one trace and each conversation is one session.
+Written first for a Raindrop failure-clustering demo; now the traffic source for
+[signals-prototype](https://github.com/vkarklins/signals-prototype).
+
+Planted bugs (enable with `--bugs`): `large_party` (wrong party-size limit), `date_shift`
+(visible only in traces), `forgetting` (2-turn history window), `glacier_mixup`, `timeout`.
+Each run's `answer_key.jsonl` records which bug each conversation targeted and which bugs fired.
 
 ## Layout
 
@@ -40,13 +48,16 @@ runs/                  output of each batch (answer key, transcripts, summary)
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # fill in both keys; RAINDROP_PROJECT_ID keeps this data separate
+cp .env.example .env   # OpenAI key, plus the Laminar (or Raindrop) key
 ```
 
 ## Running
 
 ```bash
-# 1. Dry run: calls OpenAI, sends NOTHING to Raindrop (~$0.01)
+# Typical run for signals-prototype: 8 conversations, bugs on (~1.5 cents)
+python -m harness.run --n 8 --mix baseline --bugs all --seed 2 --label demo
+
+# 1. Dry run: calls OpenAI, sends NOTHING to the telemetry backend (~$0.01)
 python -m harness.run --n 3 --dry-run --label dry
 
 # 2. Smoke test: clean traffic, real events (~40 events)
@@ -59,7 +70,7 @@ python -m harness.run --n 130 --mix baseline --bugs all --label baseline --max-e
 python -m harness.run --n 90 --mix baseline --bugs all --app-version v2 --label v2 --seed 1 --max-events 400
 ```
 
-Flags: `--workers` (parallel conversations, default 4), `--seed` (deck randomness),
+Defaults are `--mix clean --bugs ""` (no bugs). Flags: `--telemetry laminar|raindrop`, `--workers` (parallel conversations, default 4), `--seed` (deck randomness),
 `--bugs large_party,date_shift` (enable specific bugs).
 
 ## Event budget
