@@ -10,6 +10,9 @@ Written first for a Raindrop failure-clustering demo; now the traffic source for
 Planted bugs (enable with `--bugs`): `large_party` (wrong party-size limit), `date_shift`
 (visible only in traces), `forgetting` (2-turn history window), `glacier_mixup`, `timeout`.
 Each run's `answer_key.jsonl` records which bug each conversation targeted and which bugs fired.
+`bugs_by_turn` lists each turn's Laminar trace ID and the bugs that fired in that turn, so findings
+on a trace (e.g. Tripwire events) can be matched to their own bugs. A bug is recorded on the turn where
+it fires, even when its effect shows up in a later turn.
 
 ## Layout
 

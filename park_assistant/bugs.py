@@ -37,11 +37,24 @@ class BugConfig:
 
 @dataclass
 class BugRecorder:
-    """Collects the bugs that actually changed behavior during one conversation."""
+    """Collects the bugs that actually changed behavior during one conversation.
+
+    `fired` is the whole conversation; `fired_by_turn[n]` is turn n (1-based), so each
+    turn's trace (and the events a judge finds in it) can be matched to its own bugs.
+    A bug is recorded on the turn where it fires, even if its effect shows up later.
+    """
     fired: set = field(default_factory=set)
+    fired_by_turn: dict = field(default_factory=dict)
+    turn: int = 0
+
+    def start_turn(self) -> None:
+        self.turn += 1
+        self.fired_by_turn[self.turn] = set()
 
     def fire(self, name: str) -> None:
         self.fired.add(name)
+        if self.turn:
+            self.fired_by_turn[self.turn].add(name)
 
 
 # ---------------------------------------------------------------------------

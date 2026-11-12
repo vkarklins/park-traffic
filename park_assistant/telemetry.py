@@ -20,6 +20,7 @@ Why a wrapper:
 import os
 import threading
 import time
+import uuid
 
 BACKENDS = ("laminar", "raindrop")
 
@@ -101,6 +102,8 @@ class _LaminarInteraction:
     def __init__(self, span):
         self._span = span
         self.id = str(span.get_span_context().trace_id)
+        # Laminar's trace ID as a UUID string, the form Tripwire stores (traces.laminar_trace_id).
+        self.trace_id = str(uuid.UUID(int=span.get_span_context().trace_id))
         self.finished = False
 
     def track_tool(self, *, name, input, output, duration_ms, error=None):

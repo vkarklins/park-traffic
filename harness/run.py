@@ -174,6 +174,12 @@ def main():
             key = {k: r[k] for k in ("convo_id", "user_id", "scenario_id", "target_bug",
                                      "bugs_fired", "outcome", "turns", "step_violations",
                                      "app_version")}
+            # Per turn: its trace ID (matches Tripwire's traces.laminar_trace_id) and the bugs
+            # that fired in it, so each event can be labeled with its own turn's bugs.
+            key["bugs_by_turn"] = [
+                {"turn": number, "trace_id": turn["trace_id"], "bugs": turn["bugs"]}
+                for number, turn in enumerate(r["turn_log"], start=1)
+            ]
             f.write(json.dumps(key) + "\n")
     with open(out_dir / "transcripts.jsonl", "w") as f:
         for r in results:

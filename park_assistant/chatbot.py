@@ -51,6 +51,7 @@ class ParkAssistant:
         self.ctx = ToolContext(bugs=bugs, rec=rec)
 
     def respond(self, user_msg: str) -> str:
+        self.rec.start_turn()
         interaction = self.telemetry.begin(
             user_id=self.user_id, convo_id=self.convo_id, user_input=user_msg,
             properties={"app_version": self.app_version},
@@ -93,7 +94,9 @@ class ParkAssistant:
             reply = "Sorry, I'm having trouble with that right now. Could you try again?"
 
         interaction.finish(output=reply)
-        self.turns.append({"user": user_msg, "tools": turn_tools, "reply": reply})
+        self.turns.append({"user": user_msg, "tools": turn_tools, "reply": reply,
+                           "trace_id": getattr(interaction, "trace_id", None),
+                           "bugs": sorted(self.rec.fired_by_turn[self.rec.turn])})
         messages.append({"role": "assistant", "content": reply})
         # Save this whole turn (from its user message on) to the full history.
         # self.history is never truncated; hook_history only limits what the
