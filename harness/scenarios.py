@@ -154,3 +154,11 @@ MIX_BASELINE = {"large_party": 0.25, "date_shift": 0.15, "forgetting": 0.15,
                 "glacier_mixup": 0.08, "timeout": 0.03, "decoy": 0.10, None: 0.24}
 MIX_CLEAN = {None: 1.0}
 MIX_FORGETTING = {"forgetting": 1.0}  # for checking the forgetting scenario on its own
+MIX_CLUSTERING = {"glacier_mixup": 0.5, "timeout": 0.5}  # two root causes, for testing clustering
+# Five distinct causes, for scoring clusters (Nov 17). forgetting left out: it fires on
+# every long conversation and blurs labels. decoy = sold out, no bug.
+MIX_CAUSES = {"large_party": 0.20, "decoy": 0.15, "date_shift": 0.20,
+              "glacier_mixup": 0.15, "timeout": 0.15, None: 0.15}
+# Nov 19 Demo 1: half Glacier visitors, half ordinary ones. The same mix runs before and after the
+# "fix" (only --bugs changes), so the events stop because of the fix, not because the questions did.
+MIX_DEMO1 = {"glacier_mixup": 0.5, None: 0.5}

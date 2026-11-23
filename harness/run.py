@@ -31,11 +31,13 @@ from park_assistant.chatbot import ParkAssistant
 from park_assistant.telemetry import BACKENDS, make_telemetry
 
 from .render import render
-from .scenarios import MIX_BASELINE, MIX_CLEAN, MIX_FORGETTING, build_deck
+from .scenarios import (MIX_BASELINE, MIX_CAUSES, MIX_CLEAN, MIX_CLUSTERING, MIX_DEMO1, MIX_FORGETTING,
+                        build_deck)
 from .simulated_user import STYLES, SimulatedUser
 
 PRICE_IN, PRICE_OUT = 0.15 / 1e6, 0.60 / 1e6  # gpt-4o-mini, USD per token
-MIXES = {"baseline": MIX_BASELINE, "clean": MIX_CLEAN, "forgetting": MIX_FORGETTING}
+MIXES = {"baseline": MIX_BASELINE, "clean": MIX_CLEAN, "forgetting": MIX_FORGETTING,
+         "clustering": MIX_CLUSTERING, "causes": MIX_CAUSES, "demo1": MIX_DEMO1}
 
 
 class EventBudget:
